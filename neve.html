@@ -9,7 +9,7 @@
 </head>
 <body>
 
-	<canvas id="neve" onmousemove="mouse(event)"></canvas>
+	<canvas id="neve" onmousemove="mouse(event)" onmousedown="creating = true" onmouseup="creating = false"></canvas>
 	<button onclick="alt(50)">Mais neve</button>
 	<button onclick="alt(-50)">Menos neve</button>
 
@@ -176,6 +176,20 @@
 			}
 		}
 
+		var creating = false;
+		function alt_mouse() {
+			if (!creating) return;
+			var fk = new Floco(
+				Math.random() * w, // x
+				0.1 + Math.random() * 0.9, // gravidade
+				10, // balanco
+				Math.random() * 0.1 // velocidade
+			);
+			fk.x = fk.xOrig = mouseX;
+			fk.y = fk.yOrig = mouseY;
+			flocos.push(fk);
+		}
+
 		function main() {
 			var c = document.getElementById('neve');
 			c.width = 900;
@@ -226,12 +240,12 @@
     			context.fill();
 			}
 
-			for (var m = mouseX - 5; m < mouseX + 10; m++) {
+			/*for (var m = mouseX - 5; m < mouseX + 10; m++) {
 				if (mouseY + 5 >= chao[m] && chaoHeight[m] > 0) {
 					chao[m]++;
 					chaoHeight[m]--;
 				}
-			}
+			}*/
 
 			var todosTrue = true;
 			for (var j in chao) {
@@ -259,6 +273,7 @@
 		function mouse(event) {
 			mouseX = event.clientX;
 			mouseY = event.clientY;
+			alt_mouse();
 		}
 
 	</script>
