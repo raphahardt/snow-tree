@@ -1,0 +1,266 @@
+<!doctype html>
+<html>
+<head>
+	<title>a</title>
+	<style>
+	html,body { height: 100%; margin:0; padding:0; overflow:hidden; }
+	#neve { background: #000; display: block; }
+	</style>
+</head>
+<body>
+
+	<canvas id="neve" onmousemove="mouse(event)"></canvas>
+	<button onclick="alt(50)">Mais neve</button>
+	<button onclick="alt(-50)">Menos neve</button>
+
+	<script>
+	var taxaPixel = 1;
+	var flocosParados = [];	
+	function Floco(x, g, b, vb) {
+		this.tamanho = 1 * taxaPixel;
+		this.y = -10;
+		this.x = parseInt(x);
+		this.xAnt = null;
+		this.xOrig = this.x;
+		this.yOrig = this.y;
+		this.gravidade = g;
+		this.balanco = b;
+		this.velocidadeBalanco = vb;
+		this.gravidadeCounter = 0;
+		var corR = parseInt(Math.random() * 255),
+			corG = parseInt(Math.random() * 255),
+			corB = parseInt(Math.random() * 255);
+		this.cor = 'rgb('+corR+','+corG+','+corB+')';
+		this.cor = 'white';
+
+		this.state = 'falling';
+		this.pareiEmCimaDe = null;
+		this.fuiBatido = 0; // quantas vezes foi batida
+	}
+	Floco.prototype.fall = function () {
+		if (this.state === 'falling') {
+			this.yOrig += this.gravidade;
+			this.y = this.yOrig - (this.balanco ? (Math.sin(this.gravidadeCounter)*Math.cos(this.gravidadeCounter)) * 4 * this.gravidade : 0);
+			this.gravidadeCounter+=this.velocidadeBalanco;
+			this.x = (this.xOrig + (Math.sin(this.gravidadeCounter)) * this.balanco);
+
+			this.y = parseInt(this.y);
+			this.x = parseInt(this.x);
+
+			if (this.y + this.tamanho >= chao[this.x]) {
+
+				var chaoA = chao[this.x];
+				var chaoEsq = chao[this.x-1] || false;
+				var chaoDir = chao[this.x+1] || false;
+				this.y = chaoA - this.tamanho;
+				this.yOrig = this.y;
+
+				if (chaoEsq && chaoEsq > chaoA) {
+					// escorregar pra esquerda
+					this.xOrig = this.x - 1;
+					this.x = this.xOrig;
+					this.balanco = 0; // para de balancar
+					//console.log('ESCOR ESQ');
+				}
+				else if (chaoDir && chaoDir > chaoA) {
+					// escorregar pra direita
+					this.xOrig = this.x + 1;
+					this.x = this.xOrig;
+					this.balanco = 0; // para de balancar
+					//console.log('ESCOR DIR');
+				} else {
+					chao[this.x] -= this.tamanho;
+					if (chao[this.x] >= 0) chaoHeight[this.x]++;
+
+					this.x = parseInt(Math.random() * w);
+					this.xOrig = this.x;
+					this.y = -10;
+					this.yOrig = -10;
+					this.balanco = 10;
+				}
+
+			}
+			/*else if (this.y + this.tamanho > chao[this.x] || this.x > w || this.x < 0) {
+				//this.state = 'stop';
+				//this.y = chao[this.x]-this.tamanho;
+				//this.yOrig = this.y;
+
+				//console.log('BATEU NA PAREDE');
+				if (this.xAnt === this.x) this.xAnt -= 1; // chuto um valor
+				this.x = this.xAnt;
+				this.balanco = 0; // para de balançar
+
+			}
+			/*else {
+				for (var i in flocosParados) {
+					var f = flocosParados[i];
+
+					if (this.y + this.tamanho > f.y && this.x + this.tamanho > f.x && this.x < f.x + f.tamanho) {
+						this.state = 'sliding';
+						this.y = f.y-this.tamanho;
+						this.yOrig = this.y;
+						this.x = parseInt(this.x);
+						this.xOrig = this.x;
+						this.balanco = 0; // para de balançar
+						this.pareiEmCimaDe = f;
+						//console.log('PAROU EM CIMA');
+						flocosParados.push(this);
+					}
+					/*else if (this.y >= f.y && (this.x + this.tamanho >= f.x || this.x <= f.x + f.tamanho)) {
+						this.state = 'sliding';
+						this.x = this.x + this.tamanho >= f.x ? f.x-this.tamanho : f.x+this.tamanho;
+						//console.log('PAROU EM CIMA');
+						flocosParados.push(this);
+					}* /
+				}
+			}*/
+			this.xAnt = this.x;
+		}
+		/*if (this.state === 'sliding') {
+			var f = this.pareiEmCimaDe;
+			var fatorSliding = 0;
+			if (this.x > f.x) {
+				// escorrega pra direita
+				this.x = f.x + f.tamanho;
+				this.xOrig = this.x;
+				this.state = 'falling'; // volta a cair
+				this.pareiEmCimaDe = null;
+				var id = flocosParados.indexOf(this);
+				flocosParados.splice(id, 1);
+			}
+			else if (this.x < f.x) {
+				// escorrega pra esquerda
+				this.x = f.x - f.tamanho;
+				this.xOrig = this.x;
+				this.state = 'falling'; // volta a cair
+				this.pareiEmCimaDe = null;
+				var id = flocosParados.indexOf(this);
+				flocosParados.splice(id, 1);
+			}
+		}*/
+	}
+	</script>
+	<script>
+		var FPS = 60;
+		var UPDATE_INTERVAL = 1000 / FPS;
+		var w,h;
+		var context;
+		var flocos = [];
+		var chao = [];
+		var chaoHeight = [];
+		var engine;
+		var mouseX, mouseY;
+
+		var img = new Image();   // Create new img element
+		img.onload = function () {
+			img.style.display = 'none';
+			main();
+		};
+		img.src = 'arvore.gif'; // Set source path
+
+		function alt(qtde) {
+			if (qtde > 0) {
+				for (var i = 0; i < qtde; i++) {
+					flocos.push(
+						new Floco(
+							Math.random() * w, // x
+							0.1 + Math.random() * 0.9, // gravidade
+							10, // balanco
+							Math.random() * 0.1 // velocidade
+						)
+					);
+				}
+			}
+			else {
+				flocos.splice(qtde);
+			}
+		}
+
+		function main() {
+			var c = document.getElementById('neve');
+			c.width = 900;
+			c.height = 520;
+			context = c.getContext('2d');
+
+			w = c.width;
+			h = c.height;
+
+			// desenha a arvore pra ler os pixels dps (var ser apagada e redesenhada pelo update())
+			context.drawImage(img, w / 2 - 125 / 2, h - 130);
+
+			alt(80);
+
+			// vai em cada pixel horizontal
+			for (var j = 0; j < w; j++) {
+				// olha cada pixel vertical pra ver onde começa o chão
+				var y = h;
+				var pixel = context.getImageData(j, 0, 1, h);
+				for (var v = 0; v <= h; v++) {
+					// se o pixel tiver pelo menos 80% de opacidade, já é chao
+					if (pixel.data[(v + 1) * 4 - 1] >= 220) {
+						y = v;
+						break;
+					}
+				}
+				chao.push(y);
+				chaoHeight.push(0);
+			}
+
+			engine = setInterval(update, UPDATE_INTERVAL);
+		}
+
+		function update() {
+			context.clearRect(0,0,w,h);
+			context.drawImage(img, w / 2 - 125 / 2, h - 130);
+
+			/*context.fillStyle = 'red';
+			context.fillRect(mouseX - 5, mouseY - 5, 10, 10);*/
+
+			for (var i in flocos) {
+				var f = flocos[i];
+				f.fall();
+				context.fillStyle = f.cor;
+				//context.fillRect(f.x, f.y, f.tamanho, f.tamanho);
+				context.beginPath();
+    			context.arc(f.x,f.y,1,0,Math.PI*2); // Outer circle
+    			context.fill();
+			}
+
+			for (var m = mouseX - 5; m < mouseX + 10; m++) {
+				if (mouseY + 5 >= chao[m] && chaoHeight[m] > 0) {
+					chao[m]++;
+					chaoHeight[m]--;
+				}
+			}
+
+			var todosTrue = true;
+			for (var j in chao) {
+				todosTrue = todosTrue && chao[j] <= 0;
+				//var lingrad = context.createLinearGradient(0,0,0,h);
+				//lingrad.addColorStop(0, '#fff');
+				//lingrad.addColorStop(1, '#888');
+
+				context.fillStyle = 'white';
+				context.strokeStyle = 'white';
+				context.lineWidth = 2;
+				context.lineCap = 'round';
+				context.beginPath();
+				context.moveTo(j,Math.max(chao[j], 0));
+				context.lineTo(j,Math.max(chao[j], 0) + chaoHeight[j]);
+				context.stroke();
+				//context.fillRect(j, Math.max(chao[j], 0), 1, chaoHeight[j]);
+			}
+
+			if (todosTrue) {
+				clearInterval(engine);
+			}
+		}
+
+		function mouse(event) {
+			mouseX = event.clientX;
+			mouseY = event.clientY;
+		}
+
+	</script>
+</body>
+</html>
