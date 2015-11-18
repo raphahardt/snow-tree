@@ -9,7 +9,7 @@
 </head>
 <body>
 
-	<canvas id="neve" onmousemove="mouse(event)" onmousedown="creating = true" onmouseup="creating = false"></canvas>
+	<canvas id="neve" onmousemove="mouse(event)" onmousedown="creating = true" onmouseup="creating = false" onmouseout="creating=false"></canvas>
 	<button onclick="alt(50)">Mais neve</button>
 	<button onclick="alt(-50)">Menos neve</button>
 
@@ -141,14 +141,12 @@
 	}
 	</script>
 	<script>
-		var FPS = 60;
-		var UPDATE_INTERVAL = 1000 / FPS;
 		var w,h;
 		var context;
 		var flocos = [];
 		var chao = [];
 		var chaoHeight = [];
-		var engine;
+		//var som;
 		var mouseX, mouseY;
 
 		var img = new Image();   // Create new img element
@@ -200,7 +198,7 @@
 			h = c.height;
 
 			// desenha a arvore pra ler os pixels dps (var ser apagada e redesenhada pelo update())
-			context.drawImage(img, w / 2 - 125 / 2, h - 130);
+			//context.drawImage(img, w / 2 - 125 / 2, h - 130);
 
 			alt(80);
 
@@ -220,12 +218,13 @@
 				chaoHeight.push(0);
 			}
 
-			engine = setInterval(update, UPDATE_INTERVAL);
+			update(); // começa a animação
+			//som = setInterval(tocar_som, 370);
 		}
 
 		function update() {
 			context.clearRect(0,0,w,h);
-			context.drawImage(img, w / 2 - 125 / 2, h - 130);
+			//context.drawImage(img, w / 2 - 125 / 2, h - 130);
 
 			/*context.fillStyle = 'red';
 			context.fillRect(mouseX - 5, mouseY - 5, 10, 10);*/
@@ -265,9 +264,15 @@
 				//context.fillRect(j, Math.max(chao[j], 0), 1, chaoHeight[j]);
 			}
 
-			if (todosTrue) {
+			/*if (todosTrue) {
 				clearInterval(engine);
-			}
+			}*/
+			window.requestAnimationFrame(update);
+		}
+
+		window.onunload = function () {
+			clearInterval(engine);
+			//clearInterval(som);
 		}
 
 		function mouse(event) {
@@ -275,6 +280,13 @@
 			mouseY = event.clientY;
 			alt_mouse();
 		}
+
+		/*var snd = new Audio("sleigh_bell.ogg"); // buffers automatically when created
+		function tocar_som() {
+			if (!creating) return;
+			snd.currentTime = 0;
+			snd.play();
+		}*/
 
 	</script>
 </body>
